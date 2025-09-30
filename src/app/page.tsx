@@ -17,14 +17,28 @@ export default function Home() {
 
     setLoading(true);
     setError("");
+    setVideoInfo(null); // Clear previous video info
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
       const response = await axios.get(
-        `/api/info?url=${encodeURIComponent(url)}`
+        `/api/info?url=${encodeURIComponent(url)}`,
+        { 
+          signal: controller.signal,
+          timeout: 15000 
+        }
       );
+      
+      clearTimeout(timeoutId);
       setVideoInfo(response.data);
     } catch (err) {
-      setError("Gagal mengambil info video. Pastikan URL valid.");
+      if (err.name === 'AbortError' || err.code === 'ECONNABORTED') {
+        setError("Timeout - URL mungkin tidak valid atau server lambat.");
+      } else {
+        setError("Gagal mengambil info video. Pastikan URL valid.");
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -163,6 +177,19 @@ export default function Home() {
         {/* Video Info & Download Options */}
         {videoInfo && (
           <div className="bg-white/10 rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+            {/* Download Progress */}
+            {downloading && (
+              <div className="bg-blue-500/20 border border-blue-400/30 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-6 h-6 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></div>
+                  <div>
+                    <p className="text-blue-100 font-semibold">Sedang memproses download...</p>
+                    <p className="text-blue-200 text-sm">Mohon tunggu, proses ini membutuhkan waktu beberapa menit</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Video Info */}
               <div>
@@ -202,19 +229,6 @@ export default function Home() {
                   disabled={downloading}
                   compact={true}
                 />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Download Progress */}
-        {downloading && (
-          <div className="bg-blue-500/20 border border-blue-400/30 rounded-2xl p-6 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 border-3 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></div>
-              <div>
-                <p className="text-blue-100 text-lg font-semibold">Sedang memproses download...</p>
-                <p className="text-blue-200 text-sm">Mohon tunggu, proses ini membutuhkan waktu beberapa menit</p>
               </div>
             </div>
           </div>
