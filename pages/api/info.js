@@ -19,23 +19,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    const info = await youtubedl(url, {
-      dumpSingleJson: true,
-      noCheckCertificates: true,
-      noWarnings: true,
-      skipDownload: true,
-      quiet: true,
-      noPlaylist: true,
-      // Skip format extraction for speed
-      listFormats: false
-    });
+    // Test if youtube-dl-exec is available
+    const info = await Promise.race([
+      youtubedl(url, {
+        dumpSingleJson: true,
+        noCheckCertificates: true,
+        noWarnings: true,
+        skipDownload: true,
+        quiet: true,
+        noPlaylist: true,
+        listFormats: false,
+        // Railway specific options
+        preferFreeFormats: true,
+        youtubeSkipDashManifest: true
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 30000)
+      )
+    ]);
 
     const videoInfo = {
       title: info.title || 'Unknown Title',
       duration: info.duration || 0,
       channel: info.uploader || info.channel || 'Unknown Channel',
       thumbnail: info.thumbnail || info.thumbnails?.[0]?.url || '',
-      // Simplified formats - predefined options
       formats: [
         { qualityLabel: "720p", hasVideo: true, hasAudio: true },
         { qualityLabel: "480p", hasVideo: true, hasAudio: true },
@@ -58,7 +65,21 @@ export default async function handler(req, res) {
 
     res.status(200).json(videoInfo);
   } catch (error) {
-    console.error("Error fetching video info:", error);
-    res.status(500).json({ error: "Gagal mengambil info video" });
+    console.error("Error fetching video info:", error.message);
+    
+    // More specific error messages
+    let errorMessage = "Gagal mengambil info video";
+    if (error.message.includes('youtube-dl')) {
+      errorMessage = "YouTube downloader tidak tersedia di server";
+    } else if (error.message.includes('Timeout')) {
+      errorMessage = "Request timeout - coba lagi";
+    } else if (error.message.includes('Private video')) {
+      errorMessage = "Video private atau tidak tersedia";
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }

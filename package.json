@@ -6,24 +6,31 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "build:check": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "npm run setup-youtube-dl",
+    "setup-youtube-dl": "node -e \"console.log('Setting up youtube-dl...')\""
   },
   "dependencies": {
-    "youtube-dl-exec": "^2.4.13",
-    "axios": "^1.12.2",
-    "ws": "^8.18.0",
     "archiver": "^7.0.1",
+    "axios": "^1.7.9",
     "next": "15.5.4",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "youtube-dl-exec": "^3.0.10"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.6",
-    "@tailwindcss/postcss": "^4",
+    "@types/archiver": "^6.0.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "tailwindcss": "^4",
+    "eslint": "^8",
+    "eslint-config-next": "15.5.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
