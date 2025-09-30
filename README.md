@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouTube Downloader
 
-## Getting Started
+Modern web application untuk download video dan audio dari YouTube dengan UI yang elegan dan fitur lengkap.
 
-First, run the development server:
+## ✨ Features
 
+- 🎥 **Video Download** - Download video dalam berbagai kualitas (144p - 1080p)
+- 🎵 **Audio Download** - Extract audio ke MP3 dengan kualitas pilihan (64K - 320K)
+- 📦 **Batch Download** - Download multiple videos sekaligus dalam ZIP
+- 🎨 **Modern UI** - Glassmorphism design dengan dark theme
+- 📱 **Responsive** - Mobile-friendly interface
+- ⚡ **Fast** - Optimized performance
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ 
+- npm atau yarn
+
+### Installation
+
+1. Clone repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd youtube-downloader-next-js
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework**: Next.js 15
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Downloader**: youtube-dl-exec
+- **Archive**: archiver (untuk batch download)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📖 Usage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Single Download
+1. Paste YouTube URL
+2. Click "Analisis" untuk get video info
+3. Pilih format (MP3/MP4) dan kualitas
+4. Click "Download"
 
-## Deploy on Vercel
+### Batch Download
+1. Click "Batch Download Multiple Videos"
+2. Paste multiple URLs (satu per baris)
+3. Pilih "Download All as MP3" atau "Download All as MP4"
+4. Download ZIP file berisi semua video/audio
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚧 Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Note**: Aplikasi ini tidak bisa di-deploy ke Vercel karena:
+- Binary dependencies (youtube-dl-exec)
+- File system operations
+- Long execution time
+
+### Recommended Deployment:
+- **Railway** - Support binary dependencies
+- **VPS** - Full control dengan Docker
+- **DigitalOcean App Platform** - Custom binaries support
+
+## 📝 License
+
+MIT License - Gunakan dengan bijak dan patuhi ToS YouTube.

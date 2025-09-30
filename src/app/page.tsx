@@ -1,102 +1,279 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
+import axios from "axios";
+import VideoInfo from "./components/VideoInfo";
+import DownloadOptions from "./components/DownloadOptions";
+import BatchDownload from "./components/BatchDownload";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [url, setUrl] = useState("");
+  const [videoInfo, setVideoInfo] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const fetchVideoInfo = async () => {
+    if (!url) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await axios.get(
+        `/api/info?url=${encodeURIComponent(url)}`
+      );
+      setVideoInfo(response.data);
+    } catch (err) {
+      setError("Gagal mengambil info video. Pastikan URL valid.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBatchDownload = async (urlList, format, quality) => {
+    setDownloading(true);
+    setError("");
+    
+    try {
+      const response = await axios.post('/api/batch-download', {
+        urls: urlList,
+        format,
+        quality
+      }, {
+        responseType: 'blob',
+        timeout: 600000, // 10 minutes for batch
+      });
+
+      const blob = new Blob([response.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `batch_download_${format}.zip`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error("Batch download error:", err);
+      setError("Batch download gagal. Coba lagi.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownload = async (format, quality) => {
+    setDownloading(true);
+    setError("");
+    
+    try {
+      const response = await axios.get(
+        `/api/download?url=${encodeURIComponent(url)}&format=${format}&quality=${quality}`,
+        {
+          responseType: "blob",
+          timeout: 300000, // 5 minutes
+        }
+      );
+
+      const blob = new Blob([response.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      
+      const extension = format === "mp3" ? "mp3" : "mp4";
+      const cleanTitle = videoInfo.title.replace(/[^a-zA-Z0-9 ]/g, "");
+      link.download = `${cleanTitle}.${extension}`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error("Download error:", err);
+      setError("Download gagal. Coba lagi.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 py-8 px-4">
+      {/* Header */}
+      <div className="text-center mb-12 animate-fade-in">
+        <div className="relative inline-block">
+          <h1 className="text-6xl font-bold text-white mb-4 tracking-tight hover:scale-105 transition-transform duration-300">
+            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
+              YouTube
+            </span>
+            <span className="text-white"> Downloader</span>
+          </h1>
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-lg blur opacity-20 animate-pulse"></div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        <p className="text-xl text-gray-300 animate-fade-in-delay">Download video dan audio berkualitas tinggi</p>
+        <div className="flex justify-center gap-2 mt-4">
+          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+          <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+        </div>
+      </div>
+
+      {/* Main Container */}
+      <div className="max-w-4xl mx-auto">
+        {/* Input Section */}
+        <div className="bg-white/10 rounded-2xl p-8 mb-8 border border-white/20 shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300 animate-slide-up">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Paste link YouTube di sini..."
+              aria-label="YouTube URL input"
+              className="flex-1 px-6 py-4 text-lg text-white placeholder-gray-300 bg-white/10 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent focus:bg-white/15 focus:scale-[1.02] transition-all duration-200"
+              onKeyPress={(e) => e.key === "Enter" && fetchVideoInfo()}
+            />
+            <button
+              onClick={fetchVideoInfo}
+              disabled={loading || !url}
+              aria-label="Analyze YouTube video"
+              className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 transition-all duration-200 transform hover:scale-105 disabled:scale-100 shadow-lg focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-transparent"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Loading...
+                </div>
+              ) : "Analisis"}
+            </button>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-500/20 border border-red-400/30 rounded-2xl p-6 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">!</span>
+              </div>
+              <p className="text-red-100 text-lg font-medium">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Video Info & Download Options */}
+        {videoInfo && (
+          <div className="bg-white/10 rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Video Info */}
+              <div>
+                <div className="relative group mb-6">
+                  <img
+                    src={videoInfo.thumbnail}
+                    alt={videoInfo.title}
+                    className="w-full h-48 object-cover rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-4 leading-tight">
+                  {videoInfo.title}
+                </h2>
+                <div className="flex flex-wrap gap-4 text-gray-300">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <span className="text-lg">Durasi: {Math.floor(videoInfo.duration / 60)}:{(videoInfo.duration % 60).toString().padStart(2, '0')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                    <span className="text-lg">Channel: {videoInfo.channel}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Download Options */}
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-6">
+                  <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                    Download Options
+                  </span>
+                </h3>
+                <DownloadOptions 
+                  videoInfo={videoInfo} 
+                  onDownload={handleDownload}
+                  disabled={downloading}
+                  compact={true}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Download Progress */}
+        {downloading && (
+          <div className="bg-blue-500/20 border border-blue-400/30 rounded-2xl p-6 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 border-3 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></div>
+              <div>
+                <p className="text-blue-100 text-lg font-semibold">Sedang memproses download...</p>
+                <p className="text-blue-200 text-sm">Mohon tunggu, proses ini membutuhkan waktu beberapa menit</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Skeleton */}
+        {loading && (
+          <div className="bg-white/10 rounded-2xl p-8 mb-8 border border-white/20 shadow-xl animate-pulse">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <div className="bg-white/20 rounded-xl h-48 mb-6"></div>
+                <div className="bg-white/20 rounded h-6 mb-4"></div>
+                <div className="bg-white/20 rounded h-4 w-3/4"></div>
+              </div>
+              <div>
+                <div className="bg-white/20 rounded h-8 mb-6 w-1/2"></div>
+                <div className="space-y-4">
+                  <div className="bg-white/20 rounded h-12"></div>
+                  <div className="bg-white/20 rounded h-12"></div>
+                  <div className="bg-white/20 rounded h-12"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!videoInfo && !loading && (
+          <div className="bg-white/5 rounded-2xl p-12 mb-8 border border-white/10 text-center animate-fade-in hover:bg-white/10 transition-all duration-300">
+            <div className="text-6xl mb-4 animate-bounce">🎬</div>
+            <h3 className="text-2xl font-bold text-white mb-2">Siap untuk download?</h3>
+            <p className="text-gray-300 text-lg mb-4">Paste URL YouTube di atas untuk memulai</p>
+            <div className="flex justify-center gap-1">
+              <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></div>
+              <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+              <div className="w-1 h-1 bg-pink-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+            </div>
+          </div>
+        )}
+
+        {/* Batch Download */}
+        <BatchDownload 
+          onBatchDownload={handleBatchDownload}
+          disabled={downloading}
+        />
+      </div>
+
+      {/* Footer */}
+      <footer className="text-center mt-16 animate-fade-in">
+        <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+          <p className="text-gray-300 text-sm mb-2">Dibuat dengan ❤️ menggunakan Next.js</p>
+          <div className="flex justify-center gap-4 text-xs text-gray-400">
+            <span>Fast</span>
+            <span>•</span>
+            <span>Secure</span>
+            <span>•</span>
+            <span>Free</span>
+          </div>
+        </div>
       </footer>
     </div>
   );
