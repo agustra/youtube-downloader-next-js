@@ -19,6 +19,19 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('🔍 Starting video info fetch for:', url);
+    
+    // Check if youtube-dl-exec is available
+    try {
+      const { execSync } = require('child_process');
+      const pythonCheck = execSync('python3 --version', { encoding: 'utf8' });
+      const ffmpegCheck = execSync('ffmpeg -version', { encoding: 'utf8' });
+      const ytdlpCheck = execSync('yt-dlp --version', { encoding: 'utf8' });
+      console.log('✅ Dependencies check:', { python: pythonCheck.trim(), ffmpeg: 'OK', ytdlp: ytdlpCheck.trim() });
+    } catch (depError) {
+      console.error('❌ Dependencies missing:', depError.message);
+    }
+    
     // Test if youtube-dl-exec is available
     const info = await Promise.race([
       youtubedl(url, {
@@ -37,6 +50,8 @@ export default async function handler(req, res) {
         setTimeout(() => reject(new Error('Timeout')), 30000)
       )
     ]);
+    
+    console.log('✅ Video info fetched successfully');
 
     const videoInfo = {
       title: info.title || 'Unknown Title',
@@ -65,7 +80,8 @@ export default async function handler(req, res) {
 
     res.status(200).json(videoInfo);
   } catch (error) {
-    console.error("Error fetching video info:", error.message);
+    console.error("❌ Error fetching video info:", error.message);
+    console.error("❌ Full error:", error);
     
     // More specific error messages
     let errorMessage = "Gagal mengambil info video";
