@@ -14,8 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "YouTube Downloader - Download Video & Audio Berkualitas Tinggi",
-  description: "Download video dan audio dari YouTube dengan mudah. Pilih kualitas MP4 (144p-1080p) atau MP3 (64K-320K). Batch download tersedia. Fast, free, dan user-friendly.",
-  keywords: "youtube downloader, download video youtube, mp3 converter, mp4 downloader, batch download",
+  description:
+    "Download video dan audio dari YouTube dengan mudah. Pilih kualitas MP4 (144p-1080p) atau MP3 (64K-320K). Batch download tersedia. Fast, free, dan user-friendly.",
+  keywords:
+    "youtube downloader, download video youtube, mp3 converter, mp4 downloader, batch download",
   authors: [{ name: "YouTube Downloader Team" }],
   viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
