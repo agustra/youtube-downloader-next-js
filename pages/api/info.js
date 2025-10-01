@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         noCheckCertificates: true,
         noWarnings: true,
         skipDownload: true,
-        quiet: true,
+        quiet: false, // Enable output for debugging
         noPlaylist: true,
         listFormats: false,
         // Railway specific options
@@ -51,12 +51,20 @@ export default async function handler(req, res) {
       )
     ]);
     
-    console.log('✅ Video info fetched successfully');
+    console.log('📊 Raw youtube-dl response:', typeof info, info ? Object.keys(info) : 'undefined');
+    console.log('📊 Info object:', JSON.stringify(info, null, 2).substring(0, 500) + '...');
 
+    // Check if info is valid
+    if (!info || typeof info !== 'object') {
+      throw new Error(`Invalid youtube-dl response: ${typeof info}`);
+    }
+    
+    console.log('📋 Available info fields:', Object.keys(info));
+    
     const videoInfo = {
-      title: info.title || 'Unknown Title',
-      duration: info.duration || 0,
-      channel: info.uploader || info.channel || 'Unknown Channel',
+      title: info.title || info._title || 'Unknown Title',
+      duration: info.duration || info._duration || 0,
+      channel: info.uploader || info.channel || info._uploader || 'Unknown Channel',
       thumbnail: info.thumbnail || info.thumbnails?.[0]?.url || '',
       formats: [
         { qualityLabel: "720p", hasVideo: true, hasAudio: true },
@@ -65,6 +73,8 @@ export default async function handler(req, res) {
         { qualityLabel: "audio", hasVideo: false, hasAudio: true }
       ]
     };
+    
+    console.log('✅ Processed video info:', videoInfo);
 
     // Cache the result
     cache.set(cacheKey, {
