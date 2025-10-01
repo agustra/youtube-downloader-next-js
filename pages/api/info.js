@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     }
     
     // Test if youtube-dl-exec is available
-    const info = await Promise.race([
+    let info = await Promise.race([
       youtubedl(url, {
         dumpSingleJson: true,
         noCheckCertificates: true,
@@ -51,33 +51,37 @@ export default async function handler(req, res) {
       )
     ]);
     
-    console.log('📊 Raw youtube-dl response:', typeof info, info ? Object.keys(info) : 'undefined');
-    if (info) {
-      const infoStr = JSON.stringify(info, null, 2);
-      console.log('📊 Info object:', infoStr.substring(0, 500) + '...');
-    } else {
-      console.log('📊 Info object: null/undefined - trying fallback approach');
-      
-      // Fallback: Try with minimal options
-      const fallbackInfo = await youtubedl(url, {
-        dumpSingleJson: true,
-        skipDownload: true
-      });
-      
-      if (fallbackInfo && typeof fallbackInfo === 'object') {
-        console.log('✅ Fallback approach successful');
-        info = fallbackInfo;
-      } else {
-        throw new Error('Both standard and fallback approaches failed');
+    console.log('📊 Raw youtube-dl response:', typeof info);
+    
+    // Parse JSON if response is string
+    if (typeof info === 'string') {
+      try {
+        // Extract JSON from youtube-dl output
+        const jsonMatch = info.match(/\{.*\}$/s);
+        if (jsonMatch) {
+          info = JSON.parse(jsonMatch[0]);
+          console.log('✅ Successfully parsed JSON from string response');
+        } else {
+          throw new Error('No JSON found in string response');
+        }
+      } catch (parseError) {
+        console.log('❌ Failed to parse JSON:', parseError.message);
+        throw new Error(`Failed to parse youtube-dl response: ${parseError.message}`);
       }
     }
-
-    // Check if info is valid
+    
+    // Check if info is valid object
     if (!info || typeof info !== 'object') {
       throw new Error(`Invalid youtube-dl response: ${typeof info}`);
     }
     
-    console.log('📋 Available info fields:', Object.keys(info));
+    console.log('📊 Parsed info object keys:', Object.keys(info));
+    
+    console.log('📋 Video info extracted:', {
+      title: info.title,
+      duration: info.duration,
+      uploader: info.uploader
+    });
     
     const videoInfo = {
       title: info.title || info._title || 'Unknown Title',
