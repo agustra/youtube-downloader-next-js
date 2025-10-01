@@ -52,7 +52,25 @@ export default async function handler(req, res) {
     ]);
     
     console.log('📊 Raw youtube-dl response:', typeof info, info ? Object.keys(info) : 'undefined');
-    console.log('📊 Info object:', JSON.stringify(info, null, 2).substring(0, 500) + '...');
+    if (info) {
+      const infoStr = JSON.stringify(info, null, 2);
+      console.log('📊 Info object:', infoStr.substring(0, 500) + '...');
+    } else {
+      console.log('📊 Info object: null/undefined - trying fallback approach');
+      
+      // Fallback: Try with minimal options
+      const fallbackInfo = await youtubedl(url, {
+        dumpSingleJson: true,
+        skipDownload: true
+      });
+      
+      if (fallbackInfo && typeof fallbackInfo === 'object') {
+        console.log('✅ Fallback approach successful');
+        info = fallbackInfo;
+      } else {
+        throw new Error('Both standard and fallback approaches failed');
+      }
+    }
 
     // Check if info is valid
     if (!info || typeof info !== 'object') {
