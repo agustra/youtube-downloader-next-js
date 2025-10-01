@@ -65,14 +65,21 @@ export default async function handler(req, res) {
       downloadFilename = "video.mp4";
     }
 
+    console.log('🔽 Starting download with options:', options);
     await youtubedl(url, options);
+    console.log('✅ Download completed');
 
     // Find the actual file (extension might vary)
     const fs = require('fs');
-    const files = fs.readdirSync(tempDir).filter(f => f.startsWith(filename));
+    const allFiles = fs.readdirSync(tempDir);
+    const files = allFiles.filter(f => f.startsWith(filename));
+    
+    console.log('📁 All temp files:', allFiles.filter(f => f.includes(filename.substring(0, 10))));
+    console.log('🔍 Matching files:', files);
     
     if (files.length === 0) {
-      throw new Error('Download file not found');
+      console.log('❌ No files found with prefix:', filename);
+      throw new Error(`Download file not found. Expected prefix: ${filename}`);
     }
 
     const actualFile = path.join(tempDir, files[0]);
