@@ -26,8 +26,8 @@ COPY . .
 # Build application
 RUN npm run build
 
-# Remove devDependencies after build
-RUN npm prune --production
+# Keep only production dependencies + typescript (needed for next.config)
+RUN npm prune --production && npm install typescript --save
 
 # Expose port
 EXPOSE 3000

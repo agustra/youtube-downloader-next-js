@@ -5,6 +5,8 @@ services:
     dockerfilePath: ./Dockerfile
     plan: free
     healthCheckPath: /
+    buildCommand: ""
+    startCommand: ""
     envVars:
       - key: NODE_ENV
         value: production
