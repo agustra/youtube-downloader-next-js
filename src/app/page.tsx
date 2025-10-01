@@ -36,6 +36,8 @@ export default function Home() {
     } catch (err) {
       if (err.name === 'AbortError' || err.code === 'ECONNABORTED') {
         setError("Timeout - URL mungkin tidak valid atau server lambat.");
+      } else if (err.response?.data?.error) {
+        setError(err.response.data.error);
       } else {
         setError("Gagal mengambil info video. Pastikan URL valid.");
       }
